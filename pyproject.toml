@@ -1,0 +1,30 @@
+[project]
+name = "roguelike-rpg"
+version = "0.1.0"
+description = "A roguelike RPG built with a DDD+ECS layered architecture."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26.4",
+]
+
+[project.scripts]
+start = "roguelike_rpg.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.2",
+    "ruff>=0.4.5",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
