@@ -8,7 +8,8 @@ from roguelike_rpg.presentation.dungeon_renderer import DungeonRenderer
 
 # 定数定義
 MAP_WIDTH = 80
-MAP_HEIGHT = 24
+MAP_HEIGHT = 20  # UI領域のために高さを調整
+UI_HEIGHT = 5
 
 
 def main() -> None:
@@ -17,7 +18,13 @@ def main() -> None:
     """
     # 1. ゲームループとレンダラーを初期化
     game_loop = GameLoop(MAP_WIDTH, MAP_HEIGHT)
-    renderer = DungeonRenderer(game_loop.game_map, game_loop.world)
+    renderer = DungeonRenderer(
+        game_map=game_loop.game_map,
+        world=game_loop.world,
+        message_log=game_loop.message_log,
+        player_entity=game_loop.player,
+    )
+    renderer.ui_height = UI_HEIGHT
 
     # 2. アクションと移動量のマッピング
     # プレイヤーからの入力を、(dx, dy)の移動ベクトルに変換する
@@ -47,7 +54,8 @@ def main() -> None:
             game_loop.handle_player_action(dx, dy)
         else:
             # 未定義のキーが入力された場合は何もしない
-            print("無効なキーです。")
+            # このターンは何もせず、再描画を待つ
+            pass
 
 
 if __name__ == "__main__":

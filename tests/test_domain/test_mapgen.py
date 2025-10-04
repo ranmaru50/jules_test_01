@@ -5,6 +5,7 @@
 
 import pytest
 
+from roguelike_rpg.domain.ecs.world import World
 from roguelike_rpg.domain.game_map import GameMap
 from roguelike_rpg.domain.mapgen import generate_map
 from roguelike_rpg.domain.tile import FLOOR_TILE, WALL_TILE
@@ -15,7 +16,16 @@ def generated_map() -> GameMap:
     """
     テスト用のマップを生成するフィクスチャ
     """
-    return generate_map(map_width=20, map_height=10)
+    # generate_mapの新しいシグネチャに合わせて引数を追加
+    world = World()
+    enemy_data = {}  # このテストでは敵データは不要
+    return generate_map(
+        world=world,
+        map_width=20,
+        map_height=10,
+        max_enemies_per_room=0,  # 敵は配置しない
+        enemy_data=enemy_data,
+    )
 
 
 def test_generate_map_creates_correct_size(generated_map: GameMap):

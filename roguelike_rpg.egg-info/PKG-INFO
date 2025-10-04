@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: roguelike-rpg
-Version: 0.1.0
-Summary: A roguelike RPG built with a DDD+ECS layered architecture.
-Requires-Python: >=3.11
-Requires-Dist: numpy>=1.26.4
-Provides-Extra: dev
-Requires-Dist: pytest>=8.2.2; extra == "dev"
-Requires-Dist: ruff>=0.4.5; extra == "dev"
