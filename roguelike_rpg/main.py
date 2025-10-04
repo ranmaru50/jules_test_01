@@ -25,31 +25,35 @@ def main() -> None:
         world=game_loop.world,
         message_log=game_loop.message_log,
         player_entity=game_loop.player,
+        dungeon_level=game_loop.dungeon_level,
     )
     renderer.ui_height = UI_HEIGHT
 
     # 2. ゲームのメインループ
     while True:
-        # a. 現在のゲーム状態に応じて画面を描画
+        # a. レンダラーの情報を最新の状態に更新
+        renderer.dungeon_level = game_loop.dungeon_level
+
+        # b. 現在のゲーム状態に応じて画面を描画
         if game_loop.game_state == GameState.SHOW_INVENTORY:
             render_inventory_screen(world=game_loop.world, player=game_loop.player)
         else:  # PLAYERS_TURN, ENEMY_TURN, GAME_OVER など
             renderer.render()
 
-        # b. ゲームオーバーならループを抜ける
+        # c. ゲームオーバーならループを抜ける
         if game_loop.game_state == GameState.GAME_OVER:
             print("\n...ゲームオーバー...")
             break
 
-        # c. ユーザーからの入力を待つ
+        # d. ユーザーからの入力を待つ
         # FIXME: 現在はEnterキー入力が必要。よりインタラクティブな入力方式に改善する。
         action = input("> ").lower()
 
-        # d. 'q'が押されたらゲーム終了
+        # e. 'q'が押されたらゲーム終了
         if action == "q" and game_loop.game_state == GameState.PLAYERS_TURN:
             break
 
-        # GameLoopにキー入力を渡して処理させる
+        # f. GameLoopにキー入力を渡して処理させる
         game_loop.process_input(action)
 
 

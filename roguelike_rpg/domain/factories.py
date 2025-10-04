@@ -20,6 +20,7 @@ from .ecs.components import (
     PlayerComponent,
     PositionComponent,
     RenderableComponent,
+    StairsComponent,
 )
 from .ecs.world import Entity, World
 
@@ -127,3 +128,25 @@ def create_item(world: World, x: int, y: int, item_data: dict[str, Any]) -> Enti
 
     item = world.create_entity(*item_components)
     return item
+
+
+def create_stairs(world: World, x: int, y: int) -> Entity:
+    """
+    下り階段エンティティを生成し、ワールドに追加する。
+
+    Args:
+        world (World): エンティティを追加するワールドオブジェクト。
+        x (int): 階段のx座標。
+        y (int): 階段のy座標。
+
+    Returns:
+        Entity: 生成された階段エンティティのID。
+    """
+    stairs_components = [
+        StairsComponent(),
+        NameComponent(name="下り階段"),
+        PositionComponent(x=x, y=y),
+        RenderableComponent(char=">", fg=(255, 255, 255), bg=(0, 0, 0)),  # 白い >
+    ]
+    stairs = world.create_entity(*stairs_components)
+    return stairs

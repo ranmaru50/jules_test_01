@@ -20,7 +20,7 @@ def generated_map() -> GameMap:
     world = World()
     enemy_data = {}  # このテストでは敵データは不要
     item_data = {}  # このテストではアイテムデータは不要
-    return generate_map(
+    game_map, _player_start_pos = generate_map(
         world=world,
         map_width=20,
         map_height=10,
@@ -29,6 +29,7 @@ def generated_map() -> GameMap:
         enemy_data=enemy_data,
         item_data=item_data,
     )
+    return game_map
 
 
 def test_generate_map_creates_correct_size(generated_map: GameMap):

@@ -4,11 +4,11 @@
 """
 
 import random
-from typing import Any, List
+from typing import Any, List, Tuple
 
 from . import tile
 from .ecs.world import World
-from .factories import create_enemy, create_item
+from .factories import create_enemy, create_item, create_stairs
 from .game_map import GameMap
 
 
@@ -20,10 +20,10 @@ def generate_map(
     max_items_per_room: int,
     enemy_data: dict[str, Any],
     item_data: dict[str, Any],
-) -> GameMap:
+) -> Tuple[GameMap, Tuple[int, int]]:
     """
     新しいゲームマップを生成し、敵とアイテムを配置する。
-    現時点では、壁に囲まれた空の部屋を一つだけ生成する。
+    戻り値として、生成されたマップとプレイヤーの安全な開始座標を返す。
     """
     dungeon = GameMap(map_width, map_height)
 
@@ -42,13 +42,18 @@ def generate_map(
         for y in range(room_y_start + 1, room_y_end):
             spawnable_tiles.append((x, y))
 
-    # 敵とアイテムを配置
+    # プレイヤーの開始位置を決定し、配置候補から削除
+    player_start_pos = random.choice(spawnable_tiles)
+    spawnable_tiles.remove(player_start_pos)
+
+    # 敵とアイテム、階段を配置
     place_enemies(world, max_enemies_per_room, enemy_data, spawnable_tiles)
     place_items(world, max_items_per_room, item_data, spawnable_tiles)
+    place_stairs(world, spawnable_tiles)
 
     # TODO: より複雑なダンジョン生成アルゴリズム（例：複数の部屋と通路）を実装する
 
-    return dungeon
+    return dungeon, player_start_pos
 
 
 def place_enemies(
@@ -95,3 +100,18 @@ def place_items(
 
         item_type_key = random.choice(item_types)
         create_item(world, x, y, item_data[item_type_key])
+
+
+def place_stairs(
+    world: World,
+    spawnable_tiles: List[tuple[int, int]],
+) -> None:
+    """
+    部屋のランダムな位置に階段を配置する。
+    """
+    if not spawnable_tiles:
+        return
+
+    x, y = random.choice(spawnable_tiles)
+    spawnable_tiles.remove((x, y))
+    create_stairs(world, x, y)
