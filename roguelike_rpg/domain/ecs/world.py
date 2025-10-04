@@ -87,6 +87,17 @@ class World:
         ):
             del self._components[component_type][entity]
 
+    def delete_entity(self, entity: Entity) -> None:
+        """
+        エンティティとそれに関連するすべてのコンポーネントをワールドから削除する。
+
+        Args:
+            entity (Entity): 削除するエンティティ。
+        """
+        for component_type in self._components:
+            if entity in self._components[component_type]:
+                del self._components[component_type][entity]
+
     def get_entities_with(self, *component_types: Type[Component]) -> Iterable[Entity]:
         """
         指定されたすべてのコンポーネント型を持つエンティティのジェネレータを返す。

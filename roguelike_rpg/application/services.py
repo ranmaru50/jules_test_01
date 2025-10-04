@@ -20,6 +20,7 @@ from roguelike_rpg.domain.ecs.components import (
     ItemComponent,
     NameComponent,
     PositionComponent,
+    StairsComponent,
 )
 
 if TYPE_CHECKING:
@@ -71,6 +72,29 @@ def attack(world: World, attacker: Entity, defender: Entity) -> list[str]:
         logs.append(f"{attacker_name.name}の攻撃は{defender_name.name}に効かなかった。")
 
     return logs
+
+
+def descend_stairs(world: World, actor: Entity) -> bool:
+    """
+    アクタが階段の上にいるかどうかを判定する。
+
+    Args:
+        world (World): 現在のECSワールド。
+        actor (Entity): アクタのエンティティ。
+
+    Returns:
+        bool: アクタが階段の上にいればTrue, いなければFalse。
+    """
+    actor_pos = world.get_component(actor, PositionComponent)
+    if not actor_pos:
+        return False
+
+    for stairs_entity in world.get_entities_with(StairsComponent, PositionComponent):
+        stairs_pos = world.get_component(stairs_entity, PositionComponent)
+        if stairs_pos and stairs_pos.x == actor_pos.x and stairs_pos.y == actor_pos.y:
+            return True
+
+    return False
 
 
 def move_player(

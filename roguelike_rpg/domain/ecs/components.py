@@ -41,6 +41,15 @@ class PlayerComponent(Component):
     pass
 
 
+@dataclass
+class StairsComponent(Component):
+    """
+    このコンポーネントを持つエンティティが次の階層への階段であることを示すマーカー。
+    """
+
+    pass
+
+
 class EquipmentSlot(Enum):
     """装備部位を表す列挙型"""
 

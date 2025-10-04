@@ -31,11 +31,13 @@ class DungeonRenderer:
         world: "World",
         message_log: "MessageLog",
         player_entity: "Entity",
+        dungeon_level: int,
     ):
         self.game_map = game_map
         self.world = world
         self.message_log = message_log
         self.player_entity = player_entity
+        self.dungeon_level = dungeon_level
         self.ui_height = 5  # UI領域の高さ
 
     def render(self) -> None:
@@ -87,7 +89,7 @@ class DungeonRenderer:
         print(map_output)
         print("=" * self.game_map.width)  # 区切り線
         print(ui_output)
-        print("\n[WASD] 移動, [g] 拾う, [i] インベントリ, [q] 終了")
+        print("\n[WASD] 移動, [g] 拾う, [i] インベントリ, [>] 階段, [q] 終了")
 
     def render_ui(self) -> str:
         """UI部分の描画内容を文字列として生成する。"""
@@ -99,13 +101,19 @@ class DungeonRenderer:
             else "HP: N/A"
         )
 
+        # 階層表示
+        level_str = f"B{self.dungeon_level}F"
+
+        # UIの最初の行を組み立てる
+        ui_top_line = f"{hp_bar:<20} | {level_str:>8}"
+
         # メッセージログ
         log_messages = self.message_log.get_latest_messages(
             self.ui_height - 1
-        )  # HPバーの行を除いた分
+        )  # UIバーの行を除いた分
 
         # UI文字列を組み立て
-        ui_lines = [hp_bar]
+        ui_lines = [ui_top_line]
         ui_lines.extend(log_messages)
 
         # 高さが足りない場合は空行で埋める
