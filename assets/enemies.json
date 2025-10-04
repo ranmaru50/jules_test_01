@@ -1,0 +1,18 @@
+{
+    "goblin": {
+        "name": "ゴブリン",
+        "char": "g",
+        "fg_color": [63, 127, 63],
+        "max_hp": 10,
+        "defense": 0,
+        "power": 3
+    },
+    "orc": {
+        "name": "オーク",
+        "char": "o",
+        "fg_color": [0, 127, 0],
+        "max_hp": 16,
+        "defense": 1,
+        "power": 4
+    }
+}

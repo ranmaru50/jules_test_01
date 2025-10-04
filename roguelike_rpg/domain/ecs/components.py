@@ -36,3 +36,49 @@ class PlayerComponent(Component):
     """
 
     pass
+
+
+@dataclass
+class NameComponent(Component):
+    """
+    エンティティの名前を管理するコンポーネント。
+    """
+
+    name: str
+
+
+@dataclass
+class HealthComponent(Component):
+    """
+    エンティティのHP（体力）を管理するコンポーネント。
+    """
+
+    max_hp: int
+    current_hp: int
+
+
+@dataclass
+class AttackPowerComponent(Component):
+    """
+    エンティティの攻撃力を管理するコンポーネント。
+    """
+
+    power: int
+
+
+@dataclass
+class DefenseComponent(Component):
+    """
+    エンティティの防御力を管理するコンポーネント。
+    """
+
+    defense: int
+
+
+@dataclass
+class EnemyComponent(Component):
+    """
+    このコンポーネントを持つエンティティが敵であることを示すマーカー。
+    """
+
+    pass
