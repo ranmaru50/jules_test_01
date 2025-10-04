@@ -4,8 +4,11 @@
 """
 
 from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional
 
 from .component import Component
+from .entity import Entity
 
 
 @dataclass
@@ -36,6 +39,60 @@ class PlayerComponent(Component):
     """
 
     pass
+
+
+class EquipmentSlot(Enum):
+    """装備部位を表す列挙型"""
+
+    WEAPON = auto()
+    ARMOR = auto()
+
+
+@dataclass
+class ItemComponent(Component):
+    """
+    このコンポーネントを持つエンティティがアイテムであることを示すマーカー。
+    """
+
+    pass
+
+
+@dataclass
+class ConsumableComponent(Component):
+    """
+    消費可能アイテムの特性を管理するコンポーネント。
+    """
+
+    effect: Dict[str, Any]  # 例: {"type": "heal", "amount": 10}
+
+
+@dataclass
+class EquippableComponent(Component):
+    """
+    装備可能アイテムの特性を管理するコンポーネント。
+    """
+
+    slot: EquipmentSlot
+    power_bonus: int = 0
+    defense_bonus: int = 0
+
+
+@dataclass
+class InventoryComponent(Component):
+    """
+    エンティティの持ち物を管理するコンポーネント。
+    """
+
+    items: List[Entity]
+
+
+@dataclass
+class EquipmentComponent(Component):
+    """
+    エンティティの装備状態を管理するコンポーネント。
+    """
+
+    slots: Dict[EquipmentSlot, Optional[Entity]]
 
 
 @dataclass

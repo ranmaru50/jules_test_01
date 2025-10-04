@@ -10,9 +10,14 @@ from typing import TYPE_CHECKING
 
 from roguelike_rpg.domain.ecs.components import (
     AttackPowerComponent,
+    ConsumableComponent,
     DefenseComponent,
     EnemyComponent,
+    EquipmentComponent,
+    EquippableComponent,
     HealthComponent,
+    InventoryComponent,
+    ItemComponent,
     NameComponent,
     PositionComponent,
 )
@@ -101,5 +106,128 @@ def move_player(
         # 敵がいない場合は移動する
         pos.x = dest_x
         pos.y = dest_y
+
+    return logs
+
+
+def pickup_item(world: World, actor: Entity) -> list[str]:
+    """
+    アクタの足元にあるアイテムを拾い、インベントリに追加する。
+    """
+    logs = []
+    actor_pos = world.get_component(actor, PositionComponent)
+    inventory = world.get_component(actor, InventoryComponent)
+
+    if not actor_pos or not inventory:
+        return ["アイテムを拾えません。"]
+
+    # アクタの足元にあるアイテムを探す
+    item_to_pickup = None
+    for item_entity in world.get_entities_with(ItemComponent, PositionComponent):
+        item_pos = world.get_component(item_entity, PositionComponent)
+        if item_pos and item_pos.x == actor_pos.x and item_pos.y == actor_pos.y:
+            item_to_pickup = item_entity
+            break
+
+    if not item_to_pickup:
+        logs.append("ここには何もない。")
+        return logs
+
+    # インベントリに追加
+    inventory.items.append(item_to_pickup)
+    # マップからアイテムを削除（PositionComponentを削除することで描画されなくなる）
+    world.remove_component(item_to_pickup, PositionComponent)
+
+    item_name = world.get_component(item_to_pickup, NameComponent)
+    logs.append(f"{item_name.name}を拾った。")
+
+    return logs
+
+
+def use_item(world: World, user: Entity, item_entity: Entity) -> list[str]:
+    """
+    指定されたアイテムを使用し、効果を発動させる。
+    """
+    logs = []
+    consumable = world.get_component(item_entity, ConsumableComponent)
+    item_name = world.get_component(item_entity, NameComponent)
+
+    if not consumable or not item_name:
+        return ["このアイテムは使用できない。"]
+
+    effect = consumable.effect
+    effect_type = effect.get("type")
+
+    # 効果の種類に応じて処理を分岐
+    if effect_type == "heal":
+        health = world.get_component(user, HealthComponent)
+        if health:
+            amount = effect.get("amount", 0)
+            healed_amount = min(health.max_hp - health.current_hp, amount)
+            if healed_amount > 0:
+                health.current_hp += healed_amount
+                logs.append(f"{item_name.name}を使い、HPが{healed_amount}回復した。")
+            else:
+                logs.append("HPは満タンだ。")
+        else:
+            logs.append("HPがない対象には使えない。")
+    else:
+        logs.append("このアイテムは何の効果ももたらさなかった。")
+
+    # インベントリからアイテムを削除
+    inventory = world.get_component(user, InventoryComponent)
+    if inventory:
+        inventory.items.remove(item_entity)
+        # TODO: ワールドからエンティティそのものを削除する処理も必要
+
+    return logs
+
+
+def toggle_equipment(world: World, actor: Entity, item_entity: Entity) -> list[str]:
+    """
+    指定されたアイテムを装備、または装備解除する。
+    """
+    logs = []
+    equippable = world.get_component(item_entity, EquippableComponent)
+    equipment = world.get_component(actor, EquipmentComponent)
+    inventory = world.get_component(actor, InventoryComponent)
+    item_name = world.get_component(item_entity, NameComponent)
+
+    if not equippable or not equipment or not inventory or not item_name:
+        return ["このアイテムは装備できない。"]
+
+    slot = equippable.slot
+
+    # アイテムが現在装備されているかチェック
+    if equipment.slots.get(slot) == item_entity:
+        # --- 装備解除 ---
+        equipment.slots[slot] = None
+        inventory.items.append(item_entity)
+        # ボーナスを削除
+        actor_power = world.get_component(actor, AttackPowerComponent)
+        actor_defense = world.get_component(actor, DefenseComponent)
+        if actor_power:
+            actor_power.power -= equippable.power_bonus
+        if actor_defense:
+            actor_defense.defense -= equippable.defense_bonus
+        logs.append(f"{item_name.name}を外した。")
+    else:
+        # --- 装備 ---
+        # 同じスロットに別のアイテムが装備されている場合は、まずそれを外す
+        if equipment.slots.get(slot) is not None:
+            currently_equipped_entity = equipment.slots[slot]
+            logs.extend(toggle_equipment(world, actor, currently_equipped_entity))
+
+        # 新しいアイテムを装備
+        equipment.slots[slot] = item_entity
+        inventory.items.remove(item_entity)
+        # ボーナスを追加
+        actor_power = world.get_component(actor, AttackPowerComponent)
+        actor_defense = world.get_component(actor, DefenseComponent)
+        if actor_power:
+            actor_power.power += equippable.power_bonus
+        if actor_defense:
+            actor_defense.defense += equippable.defense_bonus
+        logs.append(f"{item_name.name}を装備した。")
 
     return logs

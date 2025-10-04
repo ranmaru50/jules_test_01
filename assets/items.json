@@ -1,0 +1,32 @@
+{
+    "healing_potion": {
+        "name": "回復ポーション",
+        "char": "!",
+        "fg_color": [139, 0, 255],
+        "category": "consumable",
+        "effect": {
+            "type": "heal",
+            "amount": 10
+        }
+    },
+    "dagger": {
+        "name": "ダガー",
+        "char": "/",
+        "fg_color": [0, 191, 255],
+        "category": "equipment",
+        "slot": "weapon",
+        "bonus": {
+            "power": 2
+        }
+    },
+    "leather_armor": {
+        "name": "革の鎧",
+        "char": "[",
+        "fg_color": [210, 105, 30],
+        "category": "equipment",
+        "slot": "armor",
+        "bonus": {
+            "defense": 1
+        }
+    }
+}

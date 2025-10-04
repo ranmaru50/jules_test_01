@@ -4,7 +4,9 @@
 """
 
 from roguelike_rpg.application.game_loop import GameLoop
+from roguelike_rpg.application.game_state import GameState
 from roguelike_rpg.presentation.dungeon_renderer import DungeonRenderer
+from roguelike_rpg.presentation.inventory_screen import render_inventory_screen
 
 # 定数定義
 MAP_WIDTH = 80
@@ -26,36 +28,29 @@ def main() -> None:
     )
     renderer.ui_height = UI_HEIGHT
 
-    # 2. アクションと移動量のマッピング
-    # プレイヤーからの入力を、(dx, dy)の移動ベクトルに変換する
-    action_map = {
-        "w": (0, -1),  # 上
-        "s": (0, 1),  # 下
-        "a": (-1, 0),  # 左
-        "d": (1, 0),  # 右
-    }
+    # 2. ゲームのメインループ
+    while True:
+        # a. 現在のゲーム状態に応じて画面を描画
+        if game_loop.game_state == GameState.SHOW_INVENTORY:
+            render_inventory_screen(world=game_loop.world, player=game_loop.player)
+        else:  # PLAYERS_TURN, ENEMY_TURN, GAME_OVER など
+            renderer.render()
 
-    # 3. ゲームのメインループ
-    while game_loop.running:
-        # a. 画面を描画
-        renderer.render()
+        # b. ゲームオーバーならループを抜ける
+        if game_loop.game_state == GameState.GAME_OVER:
+            print("\n...ゲームオーバー...")
+            break
 
-        # b. ユーザーからの入力を待つ
+        # c. ユーザーからの入力を待つ
         # FIXME: 現在はEnterキー入力が必要。よりインタラクティブな入力方式に改善する。
         action = input("> ").lower()
 
-        # c. 入力を処理
-        if action == "q":
-            # 'q'が入力されたらゲームを終了
-            game_loop.running = False
-        elif action in action_map:
-            # マップされたアクション（移動）を実行
-            dx, dy = action_map[action]
-            game_loop.handle_player_action(dx, dy)
-        else:
-            # 未定義のキーが入力された場合は何もしない
-            # このターンは何もせず、再描画を待つ
-            pass
+        # d. 'q'が押されたらゲーム終了
+        if action == "q" and game_loop.game_state == GameState.PLAYERS_TURN:
+            break
+
+        # GameLoopにキー入力を渡して処理させる
+        game_loop.process_input(action)
 
 
 if __name__ == "__main__":

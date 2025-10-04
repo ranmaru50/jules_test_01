@@ -7,9 +7,15 @@ from typing import Any
 
 from .ecs.components import (
     AttackPowerComponent,
+    ConsumableComponent,
     DefenseComponent,
     EnemyComponent,
+    EquipmentComponent,
+    EquipmentSlot,
+    EquippableComponent,
     HealthComponent,
+    InventoryComponent,
+    ItemComponent,
     NameComponent,
     PlayerComponent,
     PositionComponent,
@@ -21,7 +27,7 @@ from .ecs.world import Entity, World
 def create_player(world: World, x: int, y: int) -> Entity:
     """
     プレイヤーエンティティを生成し、ワールドに追加する。
-    戦闘用のコンポーネントも併せて追加する。
+    戦闘、インベントリ、装備用のコンポーネントも併せて追加する。
 
     Args:
         world (World): エンティティを追加するワールドオブジェクト。
@@ -36,10 +42,12 @@ def create_player(world: World, x: int, y: int) -> Entity:
         PlayerComponent(),
         NameComponent(name="プレイヤー"),
         PositionComponent(x=x, y=y),
-        RenderableComponent(char="@", fg=(255, 255, 0), bg=(0, 0, 0)),  # 黄色い@マーク
+        RenderableComponent(char="@", fg=(255, 255, 0), bg=(0, 0, 0)),
         HealthComponent(max_hp=30, current_hp=30),
         AttackPowerComponent(power=5),
         DefenseComponent(defense=2),
+        InventoryComponent(items=[]),
+        EquipmentComponent(slots={slot: None for slot in EquipmentSlot}),
     ]
 
     # ワールドにコンポーネント群を渡してエンティティを生成
@@ -78,3 +86,44 @@ def create_enemy(world: World, x: int, y: int, enemy_data: dict[str, Any]) -> En
     enemy = world.create_entity(*enemy_components)
 
     return enemy
+
+
+def create_item(world: World, x: int, y: int, item_data: dict[str, Any]) -> Entity:
+    """
+    データに基づいてアイテムエンティティを生成し、ワールドに追加する。
+
+    Args:
+        world (World): エンティティを追加するワールドオブジェクト。
+        x (int): アイテムの初期x座標。
+        y (int): アイテムの初期y座標。
+        item_data (dict[str, Any]): アイテムの特性を定義したデータ。
+
+    Returns:
+        Entity: 生成されたアイテムエンティティのID。
+    """
+    # 全てのアイテムに共通のコンポーネント
+    item_components = [
+        ItemComponent(),
+        NameComponent(name=item_data["name"]),
+        PositionComponent(x=x, y=y),
+        RenderableComponent(
+            char=item_data["char"], fg=tuple(item_data["fg_color"]), bg=(0, 0, 0)
+        ),
+    ]
+
+    # アイテムのカテゴリに応じてコンポーネントを追加
+    if item_data["category"] == "consumable":
+        item_components.append(ConsumableComponent(effect=item_data["effect"]))
+    elif item_data["category"] == "equipment":
+        slot = EquipmentSlot[item_data["slot"].upper()]
+        bonus = item_data.get("bonus", {})
+        item_components.append(
+            EquippableComponent(
+                slot=slot,
+                power_bonus=bonus.get("power", 0),
+                defense_bonus=bonus.get("defense", 0),
+            )
+        )
+
+    item = world.create_entity(*item_components)
+    return item

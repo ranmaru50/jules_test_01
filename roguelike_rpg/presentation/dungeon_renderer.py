@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from roguelike_rpg.domain.ecs.components import (
     HealthComponent,
+    ItemComponent,
     PositionComponent,
     RenderableComponent,
 )
@@ -51,12 +52,22 @@ class DungeonRenderer:
         ]
 
         # 3. 描画可能なエンティティを取得してバッファに上書き
-        # HPが0より大きいエンティティのみ描画対象とする
-        entities_to_render = self.world.get_entities_with(
+        # まずアイテムを描画
+        items_to_render = self.world.get_entities_with(
+            ItemComponent, PositionComponent, RenderableComponent
+        )
+        for entity in items_to_render:
+            pos = self.world.get_component(entity, PositionComponent)
+            renderable = self.world.get_component(entity, RenderableComponent)
+            if pos and renderable:
+                display_buffer[pos.y][pos.x] = renderable.char
+
+        # 次にキャラクター（HPを持つもの）を描画
+        characters_to_render = self.world.get_entities_with(
             PositionComponent, RenderableComponent, HealthComponent
         )
         for entity in sorted(
-            entities_to_render,
+            characters_to_render,
             key=lambda e: self.world.get_component(e, RenderableComponent).char != "@",
         ):  # プレイヤー(@)を最後に描画
             health = self.world.get_component(entity, HealthComponent)
@@ -76,7 +87,7 @@ class DungeonRenderer:
         print(map_output)
         print("=" * self.game_map.width)  # 区切り線
         print(ui_output)
-        print("\n[WASD] 移動, [Q] 終了")
+        print("\n[WASD] 移動, [g] 拾う, [i] インベントリ, [q] 終了")
 
     def render_ui(self) -> str:
         """UI部分の描画内容を文字列として生成する。"""
