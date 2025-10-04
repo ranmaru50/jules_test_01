@@ -8,13 +8,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from roguelike_rpg.application.game_loop import GameLoop
+from roguelike_rpg.application.game_state import GameState
 from roguelike_rpg.domain.ecs.components import (
     EnemyComponent,
     HealthComponent,
     InventoryComponent,
     ItemComponent,
+    PositionComponent,
     StairsComponent,
 )
+from roguelike_rpg.domain.factories import create_item
 
 
 @pytest.fixture
@@ -115,3 +118,26 @@ def test_dead_enemies_are_cleaned_up(game_loop_setup):
     # Assert
     assert world.get_component(enemy_to_kill, HealthComponent) is None
     assert world.get_component(enemy_to_kill, EnemyComponent) is None
+
+
+def test_picking_up_treasure_wins_game(game_loop_setup):
+    """宝物を拾うと勝利状態になることをテストする。"""
+    # Arrange
+    game_loop = game_loop_setup
+    world = game_loop.world
+    player = game_loop.player
+    player_pos = world.get_component(player, PositionComponent)
+
+    treasure_data = {
+        "name": "イェンダーの魔除け",
+        "char": "&",
+        "fg_color": [255, 215, 0],
+        "category": "treasure",
+    }
+    create_item(world, player_pos.x, player_pos.y, treasure_data)
+
+    # Act
+    game_loop.process_input("g")
+
+    # Assert
+    assert game_loop.game_state == GameState.VICTORY

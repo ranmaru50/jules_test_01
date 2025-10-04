@@ -5,10 +5,15 @@
 
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING
 
 from roguelike_rpg.application.services import attack, get_blocking_enemy_at
-from roguelike_rpg.domain.ecs.components import PositionComponent
+from roguelike_rpg.domain.ecs.components import (
+    ConfusionComponent,
+    NameComponent,
+    PositionComponent,
+)
 from roguelike_rpg.domain.pathfinding import astar
 
 if TYPE_CHECKING:
@@ -21,23 +26,39 @@ def process_enemy_turn(
 ) -> list[str]:
     """
     一体の敵のターンを処理し、行動を実行する。
-
-    Args:
-        world (World): 現在のECSワールド。
-        enemy (Entity): 行動する敵エンティティ。
-        player (Entity): プレイヤーエンティティ。
-        game_map (GameMap): 現在のゲームマップ。
-
-    Returns:
-        list[str]: 敵の行動によって生成されたログメッセージ。
+    混乱している場合は、ランダムに移動する。
     """
     logs = []
     enemy_pos = world.get_component(enemy, PositionComponent)
     player_pos = world.get_component(player, PositionComponent)
+    enemy_name = world.get_component(enemy, NameComponent)
 
-    if not enemy_pos or not player_pos:
+    if not enemy_pos or not player_pos or not enemy_name:
         return logs
 
+    # 混乱状態の処理
+    confusion = world.get_component(enemy, ConfusionComponent)
+    if confusion:
+        confusion.duration -= 1
+        if confusion.duration <= 0:
+            world.remove_component(enemy, ConfusionComponent)
+            logs.append(f"{enemy_name.name}は正気に戻った！")
+            return logs
+        else:
+            # ランダムな方向に移動
+            dx, dy = random.choice([(-1, 0), (1, 0), (0, -1), (0, 1)])
+            dest_x, dest_y = enemy_pos.x + dx, enemy_pos.y + dy
+            if (
+                game_map.in_bounds(dest_x, dest_y)
+                and game_map.tiles[dest_x, dest_y].walkable
+            ):
+                if not get_blocking_enemy_at(world, dest_x, dest_y):
+                    enemy_pos.x = dest_x
+                    enemy_pos.y = dest_y
+            logs.append(f"{enemy_name.name}は混乱してよろめいている。")
+            return logs
+
+    # 通常のAI処理
     # 視界の範囲
     SIGHT_RADIUS = 8
     # プレイヤーとの距離を計算（チェビシェフ距離）

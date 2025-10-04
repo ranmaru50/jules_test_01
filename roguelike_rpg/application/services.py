@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from roguelike_rpg.domain.ecs.components import (
     AttackPowerComponent,
+    ConfusionComponent,
     ConsumableComponent,
     DefenseComponent,
     EnemyComponent,
@@ -21,11 +22,15 @@ from roguelike_rpg.domain.ecs.components import (
     NameComponent,
     PositionComponent,
     StairsComponent,
+    TreasureComponent,
 )
 
 if TYPE_CHECKING:
+    from roguelike_rpg.application.game_loop import GameLoop
     from roguelike_rpg.domain.ecs.world import Entity, World
     from roguelike_rpg.domain.game_map import GameMap
+
+from roguelike_rpg.application.game_state import GameState
 
 
 def get_blocking_enemy_at(world: World, x: int, y: int) -> Entity | None:
@@ -157,18 +162,28 @@ def pickup_item(world: World, actor: Entity) -> list[str]:
         logs.append("ここには何もない。")
         return logs
 
-    # インベントリに追加
-    inventory.items.append(item_to_pickup)
-    # マップからアイテムを削除（PositionComponentを削除することで描画されなくなる）
-    world.remove_component(item_to_pickup, PositionComponent)
+    item_name_component = world.get_component(item_to_pickup, NameComponent)
+    item_name = item_name_component.name if item_name_component else "何か"
 
-    item_name = world.get_component(item_to_pickup, NameComponent)
-    logs.append(f"{item_name.name}を拾った。")
+    # 宝物かどうかをチェック
+    if world.get_component(item_to_pickup, TreasureComponent):
+        logs.append(f"VICTORY: {item_name}を手に入れた！")
+    else:
+        # インベントリに追加
+        inventory.items.append(item_to_pickup)
+        # マップからアイテムを削除（PositionComponentを削除することで描画されなくなる）
+        world.remove_component(item_to_pickup, PositionComponent)
+        logs.append(f"{item_name}を拾った。")
 
     return logs
 
 
-def use_item(world: World, user: Entity, item_entity: Entity) -> list[str]:
+def use_item(
+    world: World,
+    user: Entity,
+    item_entity: Entity,
+    target_xy: tuple[int, int] | None = None,
+) -> list[str]:
     """
     指定されたアイテムを使用し、効果を発動させる。
     """
@@ -181,8 +196,8 @@ def use_item(world: World, user: Entity, item_entity: Entity) -> list[str]:
 
     effect = consumable.effect
     effect_type = effect.get("type")
+    consumed = False
 
-    # 効果の種類に応じて処理を分岐
     if effect_type == "heal":
         health = world.get_component(user, HealthComponent)
         if health:
@@ -191,20 +206,77 @@ def use_item(world: World, user: Entity, item_entity: Entity) -> list[str]:
             if healed_amount > 0:
                 health.current_hp += healed_amount
                 logs.append(f"{item_name.name}を使い、HPが{healed_amount}回復した。")
+                consumed = True
             else:
                 logs.append("HPは満タンだ。")
-        else:
-            logs.append("HPがない対象には使えない。")
-    else:
-        logs.append("このアイテムは何の効果ももたらさなかった。")
 
-    # インベントリからアイテムを削除
-    inventory = world.get_component(user, InventoryComponent)
-    if inventory:
-        inventory.items.remove(item_entity)
-        # TODO: ワールドからエンティティそのものを削除する処理も必要
+    elif effect_type in ["damage", "confusion", "fireball"]:
+        if not target_xy:
+            return ["ターゲットを指定する必要があります。"]
+        target_entity = get_blocking_enemy_at(world, target_xy[0], target_xy[1])
+        if not target_entity and effect_type != "fireball":
+            return ["そこにはターゲットがいない。"]
+
+        if effect_type == "damage":
+            damage = effect.get("amount", 0)
+            target_health = world.get_component(target_entity, HealthComponent)
+            target_name = world.get_component(target_entity, NameComponent).name
+            target_health.current_hp -= damage
+            logs.append(f"{target_name}に稲妻が落ち、{damage}のダメージを与えた！")
+            consumed = True
+
+        elif effect_type == "confusion":
+            duration = effect.get("duration", 5)
+            world.add_component(target_entity, ConfusionComponent(duration=duration))
+            target_name = world.get_component(target_entity, NameComponent).name
+            logs.append(f"巻物の効果で、{target_name}は混乱した！")
+            consumed = True
+
+        elif effect_type == "fireball":
+            radius = effect.get("radius", 3)
+            damage = effect.get("amount", 12)
+            logs.append("火球が炸裂し、周囲を炎に包んだ！")
+            for enemy in world.get_entities_with(
+                EnemyComponent, PositionComponent, HealthComponent
+            ):
+                pos = world.get_component(enemy, PositionComponent)
+                distance = (
+                    (pos.x - target_xy[0]) ** 2 + (pos.y - target_xy[1]) ** 2
+                ) ** 0.5
+                if distance <= radius:
+                    enemy_name = world.get_component(enemy, NameComponent).name
+                    enemy_health = world.get_component(enemy, HealthComponent)
+                    enemy_health.current_hp -= damage
+                    logs.append(f"{enemy_name}は{damage}のダメージを受けた！")
+            consumed = True
+
+    if consumed:
+        inventory = world.get_component(user, InventoryComponent)
+        if inventory:
+            inventory.items.remove(item_entity)
 
     return logs
+
+
+def calculate_score(game_loop: "GameLoop") -> int:
+    """
+    ゲームのスコアを計算する。
+
+    Args:
+        game_loop (GameLoop): 現在のゲームループオブジェクト。
+
+    Returns:
+        int: 計算された最終スコア。
+    """
+    level_score = game_loop.dungeon_level * 100
+    kill_score = game_loop.kill_count * 25
+
+    score = level_score + kill_score
+
+    if game_loop.game_state == GameState.VICTORY:
+        score += 1000  # クリアボーナス
+
+    return score
 
 
 def toggle_equipment(world: World, actor: Entity, item_entity: Entity) -> list[str]:

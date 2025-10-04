@@ -17,4 +17,6 @@ class GameState(Enum):
     SHOW_INVENTORY = auto()  # インベントリ表示中
     DROP_INVENTORY = auto()  # アイテムを捨てる選択中
     GAME_OVER = auto()  # ゲームオーバー画面
+    VICTORY = auto()  # 勝利画面
+    TARGETING = auto()  # ターゲット選択中
     # TODO: アイテム使用選択、レベルアップ画面などの状態を追加する

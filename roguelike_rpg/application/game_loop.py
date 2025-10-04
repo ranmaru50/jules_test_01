@@ -50,6 +50,9 @@ class GameLoop:
         self.message_log = MessageLog()
         self.game_state = GameState.PLAYERS_TURN
         self.dungeon_level = 1
+        self.kill_count = 0
+        self.targeting_cursor: tuple[int, int] | None = None
+        self.item_to_use: Any | None = None
 
         # データをロード
         self.enemy_data: dict[str, Any] = load_json_data(ENEMY_DATA_PATH)
@@ -60,6 +63,7 @@ class GameLoop:
             world=self.world,
             map_width=map_width,
             map_height=map_height,
+            dungeon_level=self.dungeon_level,
             max_enemies_per_room=MAX_ENEMIES_PER_ROOM,
             max_items_per_room=MAX_ITEMS_PER_ROOM,
             enemy_data=self.enemy_data,
@@ -79,6 +83,8 @@ class GameLoop:
             self._handle_player_turn_input(key)
         elif self.game_state == GameState.SHOW_INVENTORY:
             self._handle_inventory_input(key)
+        elif self.game_state == GameState.TARGETING:
+            self._handle_targeting_input(key)
 
     def _handle_inventory_input(self, key: str) -> None:
         """インベントリ画面でのアクションを処理する。"""
@@ -99,11 +105,21 @@ class GameLoop:
             return
 
         item_entity = inventory.items[item_index]
+        consumable = self.world.get_component(item_entity, ConsumableComponent)
+
+        # ターゲット選択が必要なアイテムかチェック
+        if consumable and consumable.effect.get("type") in [
+            "damage",
+            "confusion",
+            "fireball",
+        ]:
+            self.start_targeting(item_entity)
+            return
+
+        # 通常のアイテム使用/装備
         logs = []
         action_taken = False
-
-        # アイテムが消費可能か、装備可能かによって処理を分岐
-        if self.world.get_component(item_entity, ConsumableComponent):
+        if consumable:
             logs = use_item(self.world, self.player, item_entity)
             action_taken = True
         elif self.world.get_component(item_entity, EquippableComponent):
@@ -115,10 +131,19 @@ class GameLoop:
         for log in logs:
             self.message_log.add_message(log)
 
-        # アイテムを使用/装備したら、敵のターンに移行する
         if action_taken:
             self.game_state = GameState.ENEMY_TURN
             self.process_enemy_turns()
+
+    def start_targeting(self, item_entity: Any) -> None:
+        """ターゲット選択モードを開始する。"""
+        self.game_state = GameState.TARGETING
+        self.item_to_use = item_entity
+        player_pos = self.world.get_component(self.player, PositionComponent)
+        self.targeting_cursor = (player_pos.x, player_pos.y)
+        self.message_log.add_message(
+            "ターゲットを選択してください。[Enter]で決定, [q]でキャンセル。"
+        )
 
     def _handle_player_turn_input(self, key: str) -> None:
         """プレイヤーのターン中のアクションを処理する。"""
@@ -146,10 +171,42 @@ class GameLoop:
 
         for log in logs:
             self.message_log.add_message(log)
+            if log.startswith("VICTORY:"):
+                self.game_state = GameState.VICTORY
+                action_taken = False  # 勝利したので敵のターンは来ない
+                break
 
         if action_taken:
             self.game_state = GameState.ENEMY_TURN
             self.process_enemy_turns()
+
+    def _handle_targeting_input(self, key: str) -> None:
+        """ターゲット選択モードでの入力を処理する。"""
+        move_keys = {"w": (0, -1), "s": (0, 1), "a": (-1, 0), "d": (1, 0)}
+
+        if key in move_keys:
+            dx, dy = move_keys[key]
+            # カーソルがマップ範囲内にあるように制限
+            new_x = max(0, min(self.game_map.width - 1, self.targeting_cursor[0] + dx))
+            new_y = max(0, min(self.game_map.height - 1, self.targeting_cursor[1] + dy))
+            self.targeting_cursor = (new_x, new_y)
+        elif key == "":  # Enterキーで決定
+            if self.item_to_use:
+                logs = use_item(
+                    self.world, self.player, self.item_to_use, self.targeting_cursor
+                )
+                for log in logs:
+                    self.message_log.add_message(log)
+
+                self.item_to_use = None
+                self.targeting_cursor = None
+                self.game_state = GameState.ENEMY_TURN
+                self.process_enemy_turns()
+        elif key == "q":
+            self.game_state = GameState.PLAYERS_TURN
+            self.item_to_use = None
+            self.targeting_cursor = None
+            self.message_log.add_message("ターゲット選択をキャンセルした。")
 
     def process_enemy_turns(self) -> None:
         """全ての敵のターンを処理し、プレイヤーのターンに戻す。"""
@@ -170,7 +227,7 @@ class GameLoop:
             self.game_state = GameState.PLAYERS_TURN
 
     def _cleanup_dead_entities(self) -> None:
-        """HPが0以下のエンティティをワールドから削除する。"""
+        """HPが0以下のエンティティをワールドから削除し、キルカウントを更新する。"""
         dead_entities = []
         for entity in self.world.get_entities_with(HealthComponent):
             if self.world.get_component(entity, HealthComponent).current_hp <= 0:
@@ -178,6 +235,8 @@ class GameLoop:
                     dead_entities.append(entity)
 
         for entity in dead_entities:
+            if self.world.get_component(entity, EnemyComponent):
+                self.kill_count += 1
             self.world.delete_entity(entity)
 
     def check_game_over(self) -> None:
@@ -205,6 +264,7 @@ class GameLoop:
             world=self.world,
             map_width=self.game_map.width,
             map_height=self.game_map.height,
+            dungeon_level=self.dungeon_level,
             max_enemies_per_room=max_enemies_per_room,
             max_items_per_room=max_items_per_room,
             enemy_data=self.enemy_data,
