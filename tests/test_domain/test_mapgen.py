@@ -19,12 +19,15 @@ def generated_map() -> GameMap:
     # generate_mapの新しいシグネチャに合わせて引数を追加
     world = World()
     enemy_data = {}  # このテストでは敵データは不要
+    item_data = {}  # このテストではアイテムデータは不要
     return generate_map(
         world=world,
         map_width=20,
         map_height=10,
         max_enemies_per_room=0,  # 敵は配置しない
+        max_items_per_room=0,  # アイテムは配置しない
         enemy_data=enemy_data,
+        item_data=item_data,
     )
 
 

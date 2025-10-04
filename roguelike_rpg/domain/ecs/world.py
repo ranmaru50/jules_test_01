@@ -73,6 +73,20 @@ class World:
         """
         return self._components.get(component_type, {}).get(entity)
 
+    def remove_component(self, entity: Entity, component_type: Type[T]) -> None:
+        """
+        エンティティから指定された型のコンポーネントを削除する。
+
+        Args:
+            entity (Entity): コンポーネントを削除する対象のエンティティ。
+            component_type (Type[T]): 削除するコンポーネントの型。
+        """
+        if (
+            component_type in self._components
+            and entity in self._components[component_type]
+        ):
+            del self._components[component_type][entity]
+
     def get_entities_with(self, *component_types: Type[Component]) -> Iterable[Entity]:
         """
         指定されたすべてのコンポーネント型を持つエンティティのジェネレータを返す。
