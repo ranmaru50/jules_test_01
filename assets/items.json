@@ -1,32 +1,40 @@
 {
-    "healing_potion": {
-        "name": "回復ポーション",
-        "char": "!",
-        "fg_color": [139, 0, 255],
-        "category": "consumable",
-        "effect": {
-            "type": "heal",
-            "amount": 10
-        }
+    "potions": {
+        "healing_potion": { "name": "回復ポーション", "char": "!", "fg_color": [139, 0, 255], "effect": { "type": "heal", "amount": 10 } },
+        "greater_healing_potion": { "name": "上級回復ポーション", "char": "!", "fg_color": [255, 0, 255], "effect": { "type": "heal", "amount": 25 } },
+        "potion_of_strength": { "name": "力のポーション", "char": "!", "fg_color": [255, 127, 0], "effect": { "type": "buff_power", "amount": 2, "duration": 10 } },
+        "potion_of_protection": { "name": "守りのポーション", "char": "!", "fg_color": [0, 191, 255], "effect": { "type": "buff_defense", "amount": 2, "duration": 10 } },
+        "potion_of_full_healing": { "name": "全回復のポーション", "char": "!", "fg_color": [255, 255, 0], "effect": { "type": "heal", "amount": 999 } }
     },
-    "dagger": {
-        "name": "ダガー",
-        "char": "/",
-        "fg_color": [0, 191, 255],
-        "category": "equipment",
-        "slot": "weapon",
-        "bonus": {
-            "power": 2
-        }
+    "scrolls": {
+        "scroll_of_lightning_bolt": { "name": "稲妻の巻物", "char": "?", "fg_color": [255, 255, 0], "effect": { "type": "damage", "amount": 20, "range": 5 } },
+        "scroll_of_fireball": { "name": "火球の巻物", "char": "?", "fg_color": [255, 0, 0], "effect": { "type": "damage", "amount": 12, "radius": 3 } },
+        "scroll_of_confusion": { "name": "混乱の巻物", "char": "?", "fg_color": [207, 63, 255], "effect": { "type": "confusion", "duration": 10 } },
+        "scroll_of_teleportation": { "name": "テレポートの巻物", "char": "?", "fg_color": [0, 255, 255], "effect": { "type": "teleport" } },
+        "scroll_of_mapping": { "name": "地図の巻物", "char": "?", "fg_color": [255, 255, 255], "effect": { "type": "reveal_map" } }
     },
-    "leather_armor": {
-        "name": "革の鎧",
-        "char": "[",
-        "fg_color": [210, 105, 30],
-        "category": "equipment",
-        "slot": "armor",
-        "bonus": {
-            "defense": 1
-        }
+    "weapons": {
+        "dagger": { "name": "ダガー", "char": "/", "fg_color": [0, 191, 255], "slot": "weapon", "bonus": { "power": 2 } },
+        "short_sword": { "name": "ショートソード", "char": "/", "fg_color": [191, 191, 191], "slot": "weapon", "bonus": { "power": 4 } },
+        "long_sword": { "name": "ロングソード", "char": "/", "fg_color": [223, 223, 223], "slot": "weapon", "bonus": { "power": 6 } },
+        "great_axe": { "name": "グレートアクス", "char": "P", "fg_color": [210, 105, 30], "slot": "weapon", "bonus": { "power": 8 } },
+        "sword_of_slaying": { "name": "スレイヤーソード", "char": "/", "fg_color": [255, 20, 147], "slot": "weapon", "bonus": { "power": 5, "slay": "goblin" } }
+    },
+    "armor": {
+        "leather_armor": { "name": "革の鎧", "char": "[", "fg_color": [210, 105, 30], "slot": "armor", "bonus": { "defense": 1 } },
+        "chain_mail": { "name": "チェインメイル", "char": "[", "fg_color": [191, 191, 191], "slot": "armor", "bonus": { "defense": 3 } },
+        "plate_armor": { "name": "プレートアーマー", "char": "[", "fg_color": [223, 223, 223], "slot": "armor", "bonus": { "defense": 5 } },
+        "shield": { "name": "シールド", "char": "]", "fg_color": [0, 191, 255], "slot": "shield", "bonus": { "defense": 2 } },
+        "helmet": { "name": "ヘルメット", "char": "^", "fg_color": [191, 191, 191], "slot": "helmet", "bonus": { "defense": 1 } }
+    },
+    "accessories": {
+        "ring_of_protection": { "name": "守りの指輪", "char": "=", "fg_color": [0, 255, 0], "slot": "accessory", "bonus": { "defense": 1 } },
+        "ring_of_strength": { "name": "力の指輪", "char": "=", "fg_color": [255, 0, 0], "slot": "accessory", "bonus": { "power": 1 } },
+        "amulet_of_health": { "name": "生命の護符", "char": "\"", "fg_color": [255, 127, 80], "slot": "accessory", "bonus": { "max_hp": 10 } },
+        "boots_of_speed": { "name": "俊足のブーツ", "char": "b", "fg_color": [255, 255, 0], "slot": "accessory", "bonus": { "speed": 1 } },
+        "gauntlets_of_ogre_power": { "name": "オーガパワーの小手", "char": "*", "fg_color": [210, 105, 30], "slot": "accessory", "bonus": { "power": 3 } }
+    },
+    "treasure": {
+        "amulet_of_yendor": { "name": "イェンダーの魔除け", "char": "&", "fg_color": [255, 215, 0], "category": "treasure" }
     }
 }

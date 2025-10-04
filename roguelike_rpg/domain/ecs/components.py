@@ -42,6 +42,24 @@ class PlayerComponent(Component):
 
 
 @dataclass
+class ConfusionComponent(Component):
+    """
+    エンティティが混乱していることを示すコンポーネント。
+    """
+
+    duration: int
+
+
+@dataclass
+class TreasureComponent(Component):
+    """
+    このコンポーネントを持つエンティティがゲームクリアアイテムであることを示すマーカー。
+    """
+
+    pass
+
+
+@dataclass
 class StairsComponent(Component):
     """
     このコンポーネントを持つエンティティが次の階層への階段であることを示すマーカー。
@@ -55,6 +73,9 @@ class EquipmentSlot(Enum):
 
     WEAPON = auto()
     ARMOR = auto()
+    SHIELD = auto()
+    HELMET = auto()
+    ACCESSORY = auto()
 
 
 @dataclass
@@ -84,6 +105,7 @@ class EquippableComponent(Component):
     slot: EquipmentSlot
     power_bonus: int = 0
     defense_bonus: int = 0
+    max_hp_bonus: int = 0
 
 
 @dataclass

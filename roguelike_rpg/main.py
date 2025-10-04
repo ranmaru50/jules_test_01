@@ -6,6 +6,10 @@
 from roguelike_rpg.application.game_loop import GameLoop
 from roguelike_rpg.application.game_state import GameState
 from roguelike_rpg.presentation.dungeon_renderer import DungeonRenderer
+from roguelike_rpg.presentation.end_screen import (
+    render_game_over_screen,
+    render_victory_screen,
+)
 from roguelike_rpg.presentation.inventory_screen import render_inventory_screen
 
 # 定数定義
@@ -33,27 +37,29 @@ def main() -> None:
     while True:
         # a. レンダラーの情報を最新の状態に更新
         renderer.dungeon_level = game_loop.dungeon_level
+        renderer.targeting_cursor = game_loop.targeting_cursor
 
         # b. 現在のゲーム状態に応じて画面を描画
-        if game_loop.game_state == GameState.SHOW_INVENTORY:
+        if game_loop.game_state == GameState.VICTORY:
+            render_victory_screen(game_loop)
+            break  # ゲーム終了
+        elif game_loop.game_state == GameState.GAME_OVER:
+            render_game_over_screen(game_loop)
+            break  # ゲーム終了
+        elif game_loop.game_state == GameState.SHOW_INVENTORY:
             render_inventory_screen(world=game_loop.world, player=game_loop.player)
-        else:  # PLAYERS_TURN, ENEMY_TURN, GAME_OVER など
+        else:  # PLAYERS_TURN, ENEMY_TURN
             renderer.render()
 
-        # c. ゲームオーバーならループを抜ける
-        if game_loop.game_state == GameState.GAME_OVER:
-            print("\n...ゲームオーバー...")
-            break
-
-        # d. ユーザーからの入力を待つ
+        # c. ユーザーからの入力を待つ
         # FIXME: 現在はEnterキー入力が必要。よりインタラクティブな入力方式に改善する。
         action = input("> ").lower()
 
-        # e. 'q'が押されたらゲーム終了
+        # d. 'q'が押されたらゲーム終了
         if action == "q" and game_loop.game_state == GameState.PLAYERS_TURN:
             break
 
-        # f. GameLoopにキー入力を渡して処理させる
+        # e. GameLoopにキー入力を渡して処理させる
         game_loop.process_input(action)
 
 

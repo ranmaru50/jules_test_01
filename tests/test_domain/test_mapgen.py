@@ -24,6 +24,7 @@ def generated_map() -> GameMap:
         world=world,
         map_width=20,
         map_height=10,
+        dungeon_level=1,  # 不足していた引数を追加
         max_enemies_per_room=0,  # 敵は配置しない
         max_items_per_room=0,  # アイテムは配置しない
         enemy_data=enemy_data,

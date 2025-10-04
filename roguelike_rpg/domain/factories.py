@@ -21,6 +21,7 @@ from .ecs.components import (
     PositionComponent,
     RenderableComponent,
     StairsComponent,
+    TreasureComponent,
 )
 from .ecs.world import Entity, World
 
@@ -113,9 +114,10 @@ def create_item(world: World, x: int, y: int, item_data: dict[str, Any]) -> Enti
     ]
 
     # アイテムのカテゴリに応じてコンポーネントを追加
-    if item_data["category"] == "consumable":
+    category = item_data.get("category")
+    if category == "consumable":
         item_components.append(ConsumableComponent(effect=item_data["effect"]))
-    elif item_data["category"] == "equipment":
+    elif category == "equipment":
         slot = EquipmentSlot[item_data["slot"].upper()]
         bonus = item_data.get("bonus", {})
         item_components.append(
@@ -123,8 +125,11 @@ def create_item(world: World, x: int, y: int, item_data: dict[str, Any]) -> Enti
                 slot=slot,
                 power_bonus=bonus.get("power", 0),
                 defense_bonus=bonus.get("defense", 0),
+                max_hp_bonus=bonus.get("max_hp", 0),
             )
         )
+    elif category == "treasure":
+        item_components.append(TreasureComponent())
 
     item = world.create_entity(*item_components)
     return item

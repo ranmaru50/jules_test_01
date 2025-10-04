@@ -14,5 +14,77 @@
         "max_hp": 16,
         "defense": 1,
         "power": 4
+    },
+    "slime": {
+        "name": "スライム",
+        "char": "s",
+        "fg_color": [31, 207, 31],
+        "max_hp": 8,
+        "defense": 0,
+        "power": 2
+    },
+    "bat": {
+        "name": "コウモリ",
+        "char": "b",
+        "fg_color": [127, 127, 127],
+        "max_hp": 6,
+        "defense": 0,
+        "power": 3
+    },
+    "skeleton": {
+        "name": "スケルトン",
+        "char": "S",
+        "fg_color": [223, 223, 223],
+        "max_hp": 12,
+        "defense": 1,
+        "power": 5
+    },
+    "zombie": {
+        "name": "ゾンビ",
+        "char": "Z",
+        "fg_color": [0, 159, 0],
+        "max_hp": 20,
+        "defense": 0,
+        "power": 4
+    },
+    "troll": {
+        "name": "トロール",
+        "char": "T",
+        "fg_color": [0, 63, 0],
+        "max_hp": 25,
+        "defense": 2,
+        "power": 6
+    },
+    "ogre": {
+        "name": "オーガ",
+        "char": "O",
+        "fg_color": [127, 63, 0],
+        "max_hp": 30,
+        "defense": 1,
+        "power": 8
+    },
+    "golem": {
+        "name": "ゴーレム",
+        "char": "G",
+        "fg_color": [191, 191, 191],
+        "max_hp": 40,
+        "defense": 4,
+        "power": 5
+    },
+    "lich": {
+        "name": "リッチ",
+        "char": "L",
+        "fg_color": [191, 0, 255],
+        "max_hp": 25,
+        "defense": 2,
+        "power": 10
+    },
+    "dragon": {
+        "name": "ドラゴン",
+        "char": "D",
+        "fg_color": [255, 0, 0],
+        "max_hp": 50,
+        "defense": 3,
+        "power": 12
     }
 }
